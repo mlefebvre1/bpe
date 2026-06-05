@@ -74,14 +74,14 @@ impl<'a> TokenizerTrainer<'a> {
                     .iter()
                     .max_by(|(_, count1), (_, count2)| count1.cmp(count2))
                     .unwrap();
-                (
+                MergeRule((
                     most_frequent_pair.0.to_string(),
                     most_frequent_pair.1.to_string(),
-                )
+                ))
             };
 
             // merge the pair
-            let new_token = format!("{}{}", most_frequent_pair.0, most_frequent_pair.1);
+            let new_token = most_frequent_pair.to_string();
 
             // update the word table
             word_table.update(&most_frequent_pair);
@@ -90,15 +90,15 @@ impl<'a> TokenizerTrainer<'a> {
             vocabulary.add(&new_token);
 
             // add to merge rule
-            merge_rules.push(MergeRule((most_frequent_pair.0, most_frequent_pair.1)));
+            merge_rules.push(most_frequent_pair);
 
             if vocabulary.size() >= vocab_size as usize {
                 break;
             }
         }
         Tokenizer {
-            vocabulary,
             merge_rules,
+            vocabulary,
         }
     }
 }

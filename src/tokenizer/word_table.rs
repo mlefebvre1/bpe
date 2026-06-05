@@ -1,18 +1,11 @@
 use std::collections::HashMap;
 
+use crate::tokenizer::{MergeRule, Tokenizer};
+
 pub(crate) struct WordTable(HashMap<Vec<String>, u64>);
 impl WordTable {
     pub fn from_corpus(corpus: &str) -> Self {
-        let words = corpus.split_whitespace();
-
-        // Add a special end-of-word marker to each word. ("</")
-        let words = words.map(|word| {
-            format!("{word}</")
-                .chars()
-                .map(|c| c.to_string())
-                .collect::<Vec<_>>()
-        });
-
+        let words = Tokenizer::pre_process(corpus);
         let frequency_table = Self::frequency_table(words);
         Self(frequency_table)
     }
@@ -30,10 +23,10 @@ impl WordTable {
     }
 
     /// Update the word table with the new merged pair
-    pub fn update(&mut self, merged_pair: &(String, String)) {
+    pub fn update(&mut self, merge_rule: &MergeRule) {
         let mut new_word_table = HashMap::new();
 
-        let (target_left, target_right) = merged_pair;
+        let (target_left, target_right) = &merge_rule.0;
         let merged = format!("{}{}", target_left, target_right);
 
         for (word, count) in self.0.drain() {

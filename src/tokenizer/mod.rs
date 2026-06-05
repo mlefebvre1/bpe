@@ -1,13 +1,9 @@
+mod merge_rule;
 mod trainer;
 mod vocabulary;
 mod word_table;
 
-use std::collections::HashSet;
-
-use crate::tokenizer::{trainer::TokenizerTrainer, vocabulary::Vocabulary};
-
-#[derive(Debug)]
-pub struct MergeRule((String, String));
+use crate::tokenizer::{merge_rule::MergeRule, trainer::TokenizerTrainer, vocabulary::Vocabulary};
 
 pub struct Tokenizer {
     vocabulary: Vocabulary,
@@ -18,20 +14,8 @@ impl Tokenizer {
     pub fn trainer(corpus: &str) -> TokenizerTrainer<'_> {
         TokenizerTrainer::new(corpus)
     }
-    pub fn vocabulary(&self) -> &HashSet<String> {
-        self.vocabulary.as_ref()
-    }
-    pub fn merge_rules(&self) -> &[MergeRule] {
-        &self.merge_rules
-    }
-    pub fn encode(&self, text: &str) -> Vec<String> {
-        // This pre-process could be shared.
-        let words = text.split_whitespace().map(|word| {
-            format!("{word}</")
-                .chars()
-                .map(|c| c.to_string())
-                .collect::<Vec<_>>()
-        });
+    pub fn encode(&self, text: &str) -> Vec<usize> {
+        let words = Self::pre_process(text);
         let mut result = vec![];
         for mut word in words {
             // This pair merging algorithm could be shared
@@ -51,12 +35,34 @@ impl Tokenizer {
                 word = new_word;
             }
             for token in word {
-                result.push(token);
+                match self.vocabulary.token_index(&token) {
+                    Some(token_index) => {
+                        result.push(token_index);
+                    }
+                    None => {
+                        println!("token '{token}' not found in the vocabulary! skipping it");
+                    }
+                }
             }
         }
         result
     }
-    pub fn decode(&self, tokens: &[String]) -> String {
-        tokens.join("").replace("</", " ")
+    pub fn decode(&self, tokens: &[usize]) -> String {
+        tokens
+            .iter()
+            .map(|token_index| {
+                self.vocabulary
+                    .from_token_index(*token_index)
+                    .unwrap()
+                    .to_string()
+            })
+            .collect::<Vec<_>>()
+            .join("")
+            .replace("</", " ")
+    }
+
+    fn pre_process(text: &str) -> impl Iterator<Item = Vec<String>> {
+        text.split_whitespace()
+            .map(|word| format!("{word}</").chars().map(|c| c.to_string()).collect())
     }
 }
