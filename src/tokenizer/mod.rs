@@ -35,7 +35,7 @@ impl Tokenizer {
                 word = new_word;
             }
             for token in word {
-                match self.vocabulary.token_index(&token) {
+                match self.vocabulary.token_from_word(&token) {
                     Some(token_index) => {
                         result.push(token_index);
                     }
@@ -52,7 +52,7 @@ impl Tokenizer {
             .iter()
             .map(|token_index| {
                 self.vocabulary
-                    .from_token_index(*token_index)
+                    .word_from_token(*token_index)
                     .unwrap()
                     .to_string()
             })

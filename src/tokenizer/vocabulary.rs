@@ -22,11 +22,11 @@ impl Vocabulary {
     pub fn size(&self) -> usize {
         self.0.len()
     }
-    pub fn token_index(&self, target_word: &str) -> Option<usize> {
-        self.0.iter().position(|word| target_word == word)
+    pub fn token_from_word(&self, word: &str) -> Option<usize> {
+        self.0.iter().position(|cur_word| cur_word == word)
     }
-    pub fn from_token_index(&self, token_index: usize) -> Option<&String> {
-        self.0.get_index(token_index)
+    pub fn word_from_token(&self, token: usize) -> Option<&String> {
+        self.0.get_index(token)
     }
 }
 
